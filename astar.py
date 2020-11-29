@@ -25,7 +25,7 @@ def Astar(map, start, goal):
     goal = goal[[0,1,2,3]]
 
     # While not required, we have provided an occupancy map you may use or modify.
-    occ_map = OccupancyMap(map, [0.1, 0.1, 0.1, 0.3], 30)
+    occ_map = OccupancyMap(map, [0.1, 0.1, 0.1, 0.3], 20)
     print("Finished Loading in Occupancy Map")
     # Retrieve the index in the occupancy grid matrix corresponding to a position in space.
     start_index = tuple(occ_map.metric_to_index(start))
