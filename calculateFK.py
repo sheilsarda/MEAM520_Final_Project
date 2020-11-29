@@ -159,7 +159,7 @@ class calculateFK():
             T0i=T1
         elif joint==2:
             T0i=(T1.dot(T2))
-        elif joint==3
+        elif joint==3:
             T0i=(T1.dot(T2)).dot(T3)
         elif joint==4:
             T0i=((T1.dot(T2)).dot(T3)).dot(T4)

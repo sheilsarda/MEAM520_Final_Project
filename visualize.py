@@ -23,11 +23,7 @@ def plot_obstacle(ax, obstacle):
     x31 = np.ones_like(y3) * obstacle[0]
     x32 = np.ones_like(y3) * obstacle[3]
 
-    ax.plot_wireframe(x1, y11, z1, 
-                      color='b',
-                      rstride=3,
-                      cstride=3,
-                      alpha=0.6)
+    ax.plot_wireframe(x1, y11, z1, color='b', rstride=3, cstride=3, alpha=0.6)
 
     ax.plot_wireframe(x1, y12, z1,
                       color='b',
@@ -50,7 +46,7 @@ def plot_obstacle(ax, obstacle):
     ax.plot_wireframe(x31, y3, z3,
                       color='b',
                       rstride=3,
-                      cstride=3
+                      cstride=3,
                       alpha=0.6)
 
     ax.plot_wireframe(x32, y3, z3,
