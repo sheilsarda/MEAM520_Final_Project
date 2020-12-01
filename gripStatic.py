@@ -108,9 +108,10 @@ def calcNewQ4(q, pose):
     newQ = np.copy(q)
 
     # Confirm that this joint points downward, if not, assume we couldn't extend q1-3 enough, 
-    #       so align with ground (0) and go for it
+    #       align so that gripper motion is parallel with ground and go for it, Notify User
     if T[2, 2] > -0.99996:
-        newQ[4] = 0.0
+        print("Coming at this block from an angle, rather than from above.")
+        newQ[4] = -np.pi / 2.0
         return newQ
 
     # Input the transformation for Frame5 so the comparison happens in joint 4 space
