@@ -2,7 +2,7 @@ import numpy as np
 import math
 import copy
 
-class Main():
+class calculateIK():
 
     def __init__(self):
         """
@@ -114,8 +114,9 @@ class Main():
         R_12[0,0]= np.cos(q[i,1]-np.pi/2)
 
         # Rotation matrix from frame 2 to frame 3
-        R_23 = np.zeros((3, 3))git add .
-        git
+        R_23 = np.zeros((3, 3))
+        # git add .
+        # git
         R_23[2,2]= 1
         R_23[1,1]= np.cos(q[i,2]+np.pi/2)
         R_23[1,0]= np.sin(q[i,2]+np.pi/2)

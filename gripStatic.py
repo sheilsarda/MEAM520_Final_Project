@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from calculateFK import calculateFK
+from calculateIK import calculateIK
 
 def signOf(x):
     """
@@ -136,7 +137,7 @@ def calcNewQ4(q, pose):
     '''print("Robot:")
     print(FK.forwardjoint(newQ, 5))'''
 
-    return newQ
+    return T #newQ
 
 
 
@@ -148,7 +149,7 @@ def calcNewQ4(q, pose):
 # Then do the opposite for raising block/gripper
 
 # ***TESTING CODE***
-'''np.set_printoptions(suppress=True)
+#np.set_printoptions(suppress=True)
 
 name = ['cube_static1', 'cube_dynamic1', 'cube_dynamic5', 'cube_static8', 'cube_static6', 'cube_static3']
 pose = [np.array([[   0.95533656,   -0.29551994,    0.000166  ,  -79.99892686],
@@ -176,6 +177,11 @@ np.array([[   0.95533655,   -0.29551993,    0.00019515,   90.00136458],
        [   0.00000564,    0.0006786 ,    0.99999977,    9.59809759],
        [   0.        ,    0.        ,    0.        ,    1.        ]])]
 
-# Simple ideal frame rotation for testing purposes: np.array([[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]])
+# Simple ideal frame rotation for testing purposes: np.array([[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]])'''
+ 
+Toe = calcNewQ4([-np.pi / 4.0, 0.0, 0.0, np.pi / 2.0, 0.0, 0.0], pose[3])
+print('T0e',Toe)
+IK = calculateIK()
+config1, isPos = IK.inverse(Toe)
+print(config1)
 
-print(calcNewQ4([-np.pi / 4.0, 0.0, 0.0, np.pi / 2.0, 0.0, 0.0], pose[3]))'''
