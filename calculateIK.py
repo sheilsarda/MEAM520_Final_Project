@@ -255,7 +255,20 @@ class calculateIK():
         # Account for joint limits
         exceeds_limits = [False for row in q]
 
-        for row_idx in range(q.shape[0]):
+        newQ = np.array([q[0],q[0],q[0],q[0]])
+
+        newQ[1,1] = newQ[1,1]*-1
+        newQ[1,2] = newQ[1,2]*-1
+
+        newQ[2,1] = newQ[2,1] + math.pi
+        newQ[2,2] = newQ[2,2] + math.pi
+
+        newQ[3,1] = newQ[3,1] - math.pi
+        newQ[3,2] = newQ[3,2] - math.pi
+
+        print(newQ)
+
+        for row_idx in range(newQ.shape[0]):
             for theta_idx in range(q.shape[1]):
                 if (q[row_idx, theta_idx] > self.upperLim[0, theta_idx]) or (q[row_idx, theta_idx] < self.lowerLim[0, theta_idx]):
                     exceeds_limits[row_idx] = (exceeds_limits[row_idx] | True)
