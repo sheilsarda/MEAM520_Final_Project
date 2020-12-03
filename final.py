@@ -26,20 +26,24 @@ if __name__=='__main__':
 
     # get state of your robot
     [q, qd]  = lynx.get_state()
-    print(q)
-    print(qd)
+    print("Lynx position",q)
+    print("Lynx velocity",qd)
 
     # get state of scoreable objects
     [name, pose, twist] = lynx.get_object_state()
-    print(name)
-    print(pose)
-    print(twist)
+    print("object name:",name)
+    print("Object pose:",pose)
+    print("Object twist:",twist)
+
+    # get state of your opponent's robot
+    [q, qd]  = lynx.get_opponent_state()
+    print("Opponent position:",q)
+    print("Opponent velocity:",qd)
 
     # Separate based on dynamic vs static (red v blue)
     numBlocks = len(name)
     dynamicBlocks = []
-    staticRedBlocks = [] # Maybe sort indices by distance to goal
-    staticBlueBlocks = []
+    staticBlocks = [] # Maybe sort indices by distance to goal
 
     ## Parse name array and separate by block type
     for n in range(numBlocks):
@@ -47,21 +51,13 @@ if __name__=='__main__':
             dynamicBlocks.append(n)
 
         elif name[n][5] == 's':
-            # Sort statics by which side of the world they are on (Y position)
-            if pose[n][1, 3] < 0:
-                staticRedBlocks.append(n)
-            else:
-                staticBlueBlocks.append(n)
+            # Choose statics by which side of the world they are on (Y position)
+            if pose[n][1, 3] < 0 and color is "red":
+                staticBlocks.append(n)
+            elif color is "blue":
+                staticBlocks.append(n)
 
-    print("Purple: " + str(dynamicBlocks))
-    print("Red:    " + str(staticRedBlocks))
-    print("Blue:   " + str(staticBlueBlocks)) # Check if I got the static colors right!
-
-    # Have a check on whether we are the red or blue robot?
-
-    # get state of your opponent's robot
-    [q, qd]  = lynx.get_opponent_state()
-    print(q)
-    print(qd)
+    print("Dynamic Blocks: " + str(dynamicBlocks))
+    print("Static Blocks:  " + str(staticBlocks))
 
     lynx.stop()
