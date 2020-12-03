@@ -127,6 +127,7 @@ def calcNewQ4(q, pose):
     # So if the cube's z axis is parallel to the end effector's x axis, shift by 90 degrees
     if abs(dotX) > 0.8:
         newQ[4] = clampToLims(newQ[4] - np.pi / 2.0, np.pi, FK.lowerLim[0, 4], FK.upperLim[0, 4])
+        return T.dot(zRot(newQ[4] - q[4]))
 
     # TODO - SIDEBONUS method might only work in one direction
     # TODO - another rotation adjustment needed if the newQ result clashes with another block 
@@ -136,7 +137,8 @@ def calcNewQ4(q, pose):
     '''print("Robot:")
     print(FK.forwardjoint(newQ, 5))'''
 
-    return newQ
+    # return newQ
+    return T2
 
 
 
