@@ -17,7 +17,7 @@ d5 = 68                        # Distance between joint 4 and end effector
 lowerLim = np.array([-1.4, -1.2, -1.8, -1.9, -2.0, -15]).reshape((1, 6))    # Lower joint limits in radians (grip in mm (negative closes more firmly))
 upperLim = np.array([1.4, 1.4, 1.7, 1.7, 1.5, 30]).reshape((1, 6))          # Upper joint limits in radians (grip in mm)
 
-def inverse(T0e):
+def inverse(T0e,opening):
     """
     INPUT:
     T - 4 x 4 homogeneous transformation matrix, representing
@@ -120,16 +120,19 @@ def inverse(T0e):
     theta4 = np.arctan2(-R_3e[0,2] , R_3e[1,2]) + np.pi/2
     t4sol.append(theta4)
 
+
 #     print("theta 1:",theta1)
 #     print("theta 2:",theta)
 #     print("theta 3:",t3sol)
 #     print("theta 4:",t4sol)
 #     print("theta 5:",t5sol)
 
-    finalc=[]
-    finalc.append(theta1)
-    finalc.append(theta2)
-    finalc.append(theta3)
-    finalc.append(theta4)
-    finalc.append(theta5)
+    finalc=np.zeros(6)
+    finalc[0]=theta1
+    finalc[1]=theta2
+    finalc[2]=theta3
+    finalc[3]=theta4
+    finalc[4]=theta5
+    finalc[5]=opening
     print("coordinates:",finalc)
+    return finalc
