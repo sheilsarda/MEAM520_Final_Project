@@ -45,7 +45,7 @@ class Main():
         e_pos = T0e[0:3,3]
 
         # Wrist position
-        wrist_pos = e_pos - self.d5*T0e[0:3,2] 
+        wrist_pos = e_pos - self.d5*T0e[0:3,2]
         print("wrist position: ", wrist_pos)
         print("end_effector position: ", e_pos)
 
@@ -78,7 +78,7 @@ class Main():
         # Theta_3-- second solution
         temp = np.arccos((wrist_pos[0]**2 + wrist_pos[1]**2 + (wrist_pos[2] - self.d1)**2 - self.a2**2 - self.a3**2) / (2*self.a2*self.a3))
         if(temp != None):
-            temp += -3*np.pi/2 
+            temp += -3*np.pi/2
             new_row = np.zeros((1,6))
             new_row[0,0] = theta1
             new_row[0,2] = temp
@@ -88,7 +88,7 @@ class Main():
         # Theta_2
         for i in range(q.shape[0]):
             theta3 = q[i, 2]
-            theta2 =  np.pi/2 - np.arctan2((wrist_pos[2] - self.d1) , (np.sqrt(wrist_pos[0]**2 + wrist_pos[1]**2))) + np.arctan2((self.a3*np.sin(-np.pi/2 - theta3)) , (self.a2 + self.a3*np.cos(-np.pi/2 - theta3))) 
+            theta2 =  np.pi/2 - np.arctan2((wrist_pos[2] - self.d1) , (np.sqrt(wrist_pos[0]**2 + wrist_pos[1]**2))) + np.arctan2((self.a3*np.sin(-np.pi/2 - theta3)) , (self.a2 + self.a3*np.cos(-np.pi/2 - theta3)))
             q[i,1] = np.around(theta2, 5)
             print('Theta_2 = ', q[i,1], ' rads')
 
@@ -143,7 +143,7 @@ class Main():
         for i in range(0, 3):
             for j in range(0, 3):
                 R[i,j] = T0e[i,j]
-        
+
         print('R_0e = ', R)
 
         if(isPos):
@@ -151,7 +151,7 @@ class Main():
                 # Which row from q to reference for matrix angles
                 print("Calculating theta4 and theta5 for row ", i, " of ", q.shape[0])
                 i = row_idx
-                
+
                 R_03 = np.matmul(np.matmul(R_01, R_12), R_23)
                 print("R_03 ")
                 print(R_03)
@@ -162,22 +162,22 @@ class Main():
 
                 theta5 = np.arctan2(-R_3e[2,0] , -R_3e[2,1])
                 theta4 = np.arctan2(-R_3e[0,2] , R_3e[1,2]) + np.pi/2
-                
+
                 print('Theta_4 = ', theta4, ' rads')
-                print('Theta_5 = ', theta5, ' rads')            
+                print('Theta_5 = ', theta5, ' rads')
 
                 q[i,3] = theta4
-                q[i,4] = theta5  
+                q[i,4] = theta5
 
                 R_check = np.matmul(np.matmul(R_03, R_34), R_45)
                 print("R_check", R_check)
-            
+
             print('q after populating every theta: ', q)
 
         else:
             T0e_feasible = copy.deepcopy(T0e)
             # Orientation of end effector
-            # is unreachable. Goal is to 
+            # is unreachable. Goal is to
             # project z-orientation
 
             print("end effector", e_pos)
@@ -188,7 +188,7 @@ class Main():
             print("theta1_w", theta1_w)
 
             normal_vec = [-np.sin(theta1), np.cos(theta1), 0]
-            z_prime = T0e[0:3, 2] 
+            z_prime = T0e[0:3, 2]
             z_prime_norm = np.linalg.norm(z_prime)
 
             dot_value = np.dot(z_prime, normal_vec)
@@ -209,11 +209,11 @@ class Main():
 
             print("normal_vec", normal_vec)
             print("Feasible z (non-normalized): ", z_e)
-   
+
             print("Feasible z (1): ", z_e)
-         
+
             # Start projecting y-axis
-            y_prime = T0e[0:3, 1] 
+            y_prime = T0e[0:3, 1]
             print("Intended y: ", y_prime)
             normal_vec_z = z_e
             y_prime_norm = np.linalg.norm(y_prime)
@@ -233,13 +233,13 @@ class Main():
             print("Feasible y: ", y_e)
 
             # Start projecting x-axis
-            x_prime = T0e[0:3, 0] 
+            x_prime = T0e[0:3, 0]
             print("Intended x: ", x_prime)
-            
+
             x_e = np.cross(y_e, z_e)
             x_norm = np.linalg.norm(x_e)
             x_e /= x_norm
-            
+
             print("Feasible x: ", x_e)
 
             T0e_feasible[0:3, 0]  = x_e
@@ -247,7 +247,7 @@ class Main():
             T0e_feasible[0:3, 2]  = z_e
 
             print("Feasible T0e: ", T0e_feasible)
-            
+
             # Recursive call to the inverse func
             return self.inverse(T0e_feasible)
 
@@ -266,5 +266,3 @@ class Main():
         # Your code ends here
 
         return q, isPos
-
-
