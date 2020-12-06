@@ -81,10 +81,12 @@ if __name__ == '__main__':
     for r in range(0, len(staticBlocks)):
         if pose[staticBlocks[r]][2, -1] < 10 and pose[staticBlocks[r]][2, -1] > 5:
             platform1.append(staticBlocks[r])
-        elif pose[staticBlocks[r]][2, -1] < 30 and pose[staticBlocks[r]][2, -1] > 5:
+        elif pose[staticBlocks[r]][2,-1]<30 and pose[staticBlocks[r]][2,-1]>5:
             platform2.append(staticBlocks[r])
-    print("platform1:", platform1)
-    print("platform2:", platform2)
+    print("platform1:",platform1)
+    print("platform2:",platform2)
+
+    setpath([0,0,0,0,0,0])
 
     for i in range(0, len(platform2)):
         # approaching first object in platform 1

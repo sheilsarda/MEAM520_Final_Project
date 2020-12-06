@@ -4,6 +4,6 @@
 
 ### Sheil Sarda
 
-### Brian Vincent
+### Brian Grimaldi
 
 ### Alexis Ward
