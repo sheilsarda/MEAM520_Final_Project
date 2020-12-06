@@ -22,14 +22,6 @@ def setpath(finq):
         sleep(3)
         curq, _ = lynx.get_state()
         print(curq)
-<<<<<<< Updated upstream
-        if abs(curq[0]-finq[0]) < 0.05:
-            if abs(curq[1]-finq[1]) < 0.05:
-                if abs(curq[2]-finq[2]) < 0.05:
-                    if abs(curq[3]-finq[3]) < 0.05:
-                        if abs(curq[4]-finq[4]) < 0.05:
-                            ispos = True
-=======
         if abs(curq[0]-finq[0])<0.05:
             if abs(curq[1]-finq[1])<0.05:
                 if abs(curq[2]-finq[2])<0.05:
@@ -50,7 +42,6 @@ def closestblock():
     #return index of dynamicBlocks to pickup
     print("index:",i)
     return i
->>>>>>> Stashed changes
 
 if __name__ == '__main__':
 
@@ -77,13 +68,6 @@ if __name__ == '__main__':
     print("Object twist:", twist)
 
     # get state of your opponent's robot
-<<<<<<< Updated upstream
-    [q, qd] = lynx.get_opponent_state()
-    print("Opponent position:", q)
-    print("Opponent velocity:", qd)
-
-  
-=======
     [q, qd]  = lynx.get_opponent_state()
     print("Opponent position:",q)
     print("Opponent velocity:",qd)
@@ -91,7 +75,6 @@ if __name__ == '__main__':
     #Dynamic block test
     # setpath([0.9,0.05,np.pi/5,0,1.5,30])
         # Separate based on dynamic vs static (red v blue)
->>>>>>> Stashed changes
     numBlocks = len(name)
     dynamicBlocks = []
     staticBlocks = []  # Maybe sort indices by distance to goal
@@ -120,76 +103,6 @@ if __name__ == '__main__':
             platform2.append(staticBlocks[r])
     print("platform1:",platform1)
     print("platform2:",platform2)
-
-<<<<<<< Updated upstream
-    setpath([0,0,0,0,0,0])
-
-    for i in range(0, len(platform2)):
-        # approaching first object in platform 1
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
-        newq = inverse(Tf, 30)
-        setpath(newq)
-        
-        # lower to pick up block from platform 1
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
-        newq = inverse(Tf, 30)
-        setpath(newq)
-        
-        # grasp
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
-        newq = inverse(Tf, 0)
-        setpath(newq)
-        
-        # pick up 120mm above
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
-        newq = inverse(Tf, 0)
-        setpath(newq)
-        
-        # Going towards goal position
-        setpath([-1.4, 0.3, -0.3, 1.2456, -2, 0])
-        
-        # Path to first block position on goal
-        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
-        
-        # Releasing the block at the first position
-        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
-        print("end of platform 2")
-    
-    # Getting right to the platform 1
-    for i in range(0, len(platform1)):
-        
-        # approaching first object in platform 1
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
-        newq = inverse(Tf, 30)
-        setpath(newq)
-        
-        # lower to pick up block from platform 1
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
-        newq = inverse(Tf, 30)
-        setpath(newq)
-        
-        # grasp
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
-        newq = inverse(Tf, 0)
-        setpath(newq)
-        
-        # pick up 120mm above
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
-        newq = inverse(Tf, 0)
-        setpath(newq)
-
-        # Going towards goal position
-        setpath([-1.1, 0.3, -0.3, 1.2456, -2, 0])
-
-        # Path to first block position on goal
-        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
-
-        # Releasing the block at the first position
-        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
-        print("end of platform 1")
-
-=======
-    #Making an array to
 
     #Dynamic test:
     #STARTING POSE FOR DYNAMIC
@@ -238,62 +151,70 @@ if __name__ == '__main__':
     sleep(2)
     setpath([-1.4,0.3,-0.3,1.2456,-2,0])
 
-    # for i in range(0,len(platform2)):
-    #     #approaching first object in platform 1
-    #     Tf=calcNewQ4(q, pose[platform2[i]], color,60)
-    #     newq=inverse(Tf,30)
-    #     setpath(newq)
-    #     #lower to pick up block from platform 1
-    #     Tf=calcNewQ4(q, pose[platform2[i]], color,10)
-    #     newq=inverse(Tf,30)
-    #     setpath(newq)
-    #     #grasp
-    #     Tf=calcNewQ4(q, pose[platform2[i]], color,10)
-    #     newq=inverse(Tf,0)
-    #     setpath(newq)
-    #     #pick up 120mm above
-    #     Tf=calcNewQ4(q, pose[platform2[i]], color,60)
-    #     newq=inverse(Tf,0)
-    #     setpath(newq)
-    #     # #Getting out of the platform area
-    #     # setpath([0,0,0,0,-2,0])
-    #     #Going towards goal position
-    #     setpath([-1.4,0.3,-0.3,1.2456,-2,0])
-    #     #Path to first block position on goal
-    #     setpath([-1.4,1.2,-1.5,np.pi/2,-np.pi/2,0])
-    #     #Releasing the block at the first position
-    #     setpath([-1.4,1.2,-1.5,np.pi/2,-np.pi/2,30])
-    #     print("end of platform 2")
-    # #Getting right to the platform 1
-    # # setpath([0,0.5,-0.2,np.pi/2,0,30])
-    # # q=[0,0.5,-0.2,np.pi/2,0,30]
-    # for i in range(0,len(platform1)):
-    #     #approaching first object in platform 1
-    #     Tf=calcNewQ4(q, pose[platform1[i]], color,60)
-    #     newq=inverse(Tf,30)
-    #     setpath(newq)
-    #     #lower to pick up block from platform 1
-    #     Tf=calcNewQ4(q, pose[platform1[i]], color,10)
-    #     newq=inverse(Tf,30)
-    #     setpath(newq)
-    #     #grasp
-    #     Tf=calcNewQ4(q, pose[platform1[i]], color,10)
-    #     newq=inverse(Tf,0)
-    #     setpath(newq)
-    #     #pick up 120mm above
-    #     Tf=calcNewQ4(q, pose[platform1[i]], color,60)
-    #     newq=inverse(Tf,0)
-    #     setpath(newq)
-    #     # #Getting out of the platform area
-    #     # setpath([0,0,0,0,-2,0])
-    #     #Going towards goal position
-    #     setpath([-1.1,0.3,-0.3,1.2456,-2,0])
-    #     #Path to first block position on goal
-    #     setpath([-1.2,1.2,-1.5,np.pi/2,-np.pi/2,0])
-    #     #Releasing the block at the first position
-    #     setpath([-1.2,1.2,-1.5,np.pi/2,-np.pi/2,30])
-    #     print("end of platform 1")
+    setpath([0,0,0,0,0,0])
 
+    for i in range(0, len(platform2)):
+        # approaching first object in platform 1
+        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
+        newq = inverse(Tf, 30)
+        setpath(newq)
 
->>>>>>> Stashed changes
+        # lower to pick up block from platform 1
+        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
+        newq = inverse(Tf, 30)
+        setpath(newq)
+
+        # grasp
+        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
+        newq = inverse(Tf, 0)
+        setpath(newq)
+
+        # pick up 120mm above
+        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
+        newq = inverse(Tf, 0)
+        setpath(newq)
+
+        # Going towards goal position
+        setpath([-1.4, 0.3, -0.3, 1.2456, -2, 0])
+
+        # Path to first block position on goal
+        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
+
+        # Releasing the block at the first position
+        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+        print("end of platform 2")
+
+    # Getting right to the platform 1
+    for i in range(0, len(platform1)):
+
+        # approaching first object in platform 1
+        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
+        newq = inverse(Tf, 30)
+        setpath(newq)
+
+        # lower to pick up block from platform 1
+        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
+        newq = inverse(Tf, 30)
+        setpath(newq)
+
+        # grasp
+        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
+        newq = inverse(Tf, 0)
+        setpath(newq)
+
+        # pick up 120mm above
+        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
+        newq = inverse(Tf, 0)
+        setpath(newq)
+
+        # Going towards goal position
+        setpath([-1.1, 0.3, -0.3, 1.2456, -2, 0])
+
+        # Path to first block position on goal
+        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
+
+        # Releasing the block at the first position
+        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+        print("end of platform 1")
+
     lynx.stop()
