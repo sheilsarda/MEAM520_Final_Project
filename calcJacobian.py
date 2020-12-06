@@ -1,3 +1,6 @@
+import numpy as np
+from calculateFK import calculateFK
+
 def calcJacobian(q, joint):
     Jacv=np.zeros((3,6)) #zeroes after col: joint+1
     Jacw=np.zeros((3,6)) #zeroes after col: joint+1

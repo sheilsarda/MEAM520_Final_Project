@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-from arm_controller import ArmController
+
 from time import sleep
 import numpy as np
 import rospy
@@ -13,6 +13,7 @@ import sys
 from os import getcwd
 from copy import deepcopy
 sys.path.append(getcwd() + "/../Core")
+from arm_controller import ArmController
 
 # Function definition to set paths
 def setpath(finq):
