@@ -2,11 +2,13 @@ import numpy as np
 import math
 from calculateFK import calculateFK
 
+
 def signOf(x):
     """
     Retrieve the sign of scalar input x, considers 0 positive
     """
     return -1.0 if x < 0.0 else 1.0
+
 
 def normalize(vec):
     """
@@ -16,6 +18,7 @@ def normalize(vec):
     """
     mag = np.linalg.norm(vec)
     return vec if (mag == 0.0 or mag == 1.0) else (vec / mag)
+
 
 def angularDifference(vec1, vec2, axis):
     """
@@ -38,6 +41,7 @@ def angularDifference(vec1, vec2, axis):
     sign = signOf(vec1[a] * vec2[b] - vec1[b] * vec2[a])
 
     return angle, sign
+
 
 def checkCubeAngle(cubeR, rotAxis=2, jointR=np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])):
     """
@@ -69,7 +73,7 @@ def checkCubeAngle(cubeR, rotAxis=2, jointR=np.array([[1.0, 0.0, 0.0], [0.0, 1.0
 
     # Now get the angle of rotation using law of cosin, comparing non-axis-of-rotation axes
     jointComp = normalize(jointR[:, (rotAxis + 1) % 3])
-    cubeComp  = normalize(cubeR[:3, (cubeAxis + 1) % 3])
+    cubeComp = normalize(cubeR[:3, (cubeAxis + 1) % 3])
     angle, direction = angularDifference(jointComp, cubeComp, 2)
 
     # Use Joint 4's dir to help determine the direction of rotation
@@ -77,9 +81,11 @@ def checkCubeAngle(cubeR, rotAxis=2, jointR=np.array([[1.0, 0.0, 0.0], [0.0, 1.0
 
     # Minimize adjustments to be less than 45 degrees
     angle = angle % (np.pi / 2)
-    if (angle > np.pi / 4.0): angle = (angle - np.pi / 2.0)
+    if (angle > np.pi / 4.0):
+        angle = (angle - np.pi / 2.0)
 
     return sign * direction * angle
+
 
 def zRot(angle):
     """
@@ -94,6 +100,7 @@ def zRot(angle):
                      [0.0, 0.0, 1.0, 0.0],
                      [0.0, 0.0, 0.0, 1.0]])
 
+
 def zRot3x3(angle):
     """
     Z-Axis Rotation
@@ -106,6 +113,7 @@ def zRot3x3(angle):
                      [s,    c,  0.0],
                      [0.0, 0.0, 1.0]])
 
+
 def clampToLims(val, adjust, lowerLim, upperLim):
     """
     Check if a scalar is within a certain range, shifts it by a given adjustment value if not
@@ -117,11 +125,14 @@ def clampToLims(val, adjust, lowerLim, upperLim):
         Output:
             val,        scalar - possibly adjusted by 'amount'
     """
-    if val >= upperLim: return (val - adjust)
-    if val <= lowerLim: return (val + adjust)
+    if val >= upperLim:
+        return (val - adjust)
+    if val <= lowerLim:
+        return (val + adjust)
     return val
 
-def calcNewQ4(q, pose, color,a):
+
+def calcNewQ4(q, pose, color, a):
     """
     Calculates the new joint(4) position to align robot end effector with a cube
         Parameters:
@@ -135,7 +146,7 @@ def calcNewQ4(q, pose, color,a):
     # REMINDER? - if IK shows this rotation can not be reached, should prob just make
     # q4 = -np.pi / 2.0 : least liklihood of collision as long as pos can be reached
 
-     # Test Prints
+    # Test Prints
     print("Cube:")
     print(pose)
 
@@ -174,18 +185,20 @@ def calcNewQ4(q, pose, color,a):
     dq4 = checkCubeAngle(pose, jointR=T[:3, :3])
     print(dq4)
 
-    q4 = clampToLims(q[4] + dq4, np.pi / 2.0, FK.lowerLim[0, 4], FK.upperLim[0, 4])
+    q4 = clampToLims(q[4] + dq4, np.pi / 2.0,
+                     FK.lowerLim[0, 4], FK.upperLim[0, 4])
 
     # SIDEBONUS: Check new transformation of end effector
     Te = T.dot(zRot3x3(q4 - q[4]))
-    #print(T2)
+    # print(T2)
 
     # Want to rotate so that the grips do not overlap the cube's white face...
     dotX = np.dot(Te[:, 0], pose[:3, 2])
 
     # So if the cube's z axis is parallel to the end effector's x axis, shift by 90 degrees
     if abs(dotX) > 0.8:
-        q4 = clampToLims(q4 - np.pi / 2.0, np.pi, FK.lowerLim[0, 4], FK.upperLim[0, 4])
+        q4 = clampToLims(q4 - np.pi / 2.0, np.pi,
+                         FK.lowerLim[0, 4], FK.upperLim[0, 4])
         Te = T.dot(zRot3x3(q4 - q[4]))
         print("yeah")
 
@@ -193,13 +206,13 @@ def calcNewQ4(q, pose, color,a):
     print("Robot")
     print(Te)
     if color == "red":
-        cons=200
+        cons = 200
     else:
-        cons=-200
+        cons = -200
     # return newQ
-    return np.array([[Te[0,0], Te[0,1], Te[0,2],    pose[0,3]+cons],
-                     [Te[1,0], Te[1,1], Te[1,2],    pose[1,3]+cons],
-                     [Te[2,0], Te[2,1], Te[2,2], pose[2,3] + a],
+    return np.array([[Te[0, 0], Te[0, 1], Te[0, 2],    pose[0, 3]+cons],
+                     [Te[1, 0], Te[1, 1], Te[1, 2],    pose[1, 3]+cons],
+                     [Te[2, 0], Te[2, 1], Te[2, 2], pose[2, 3] + a],
                      [0.0,       0.0,     0.0,         1.0]])
 
 
