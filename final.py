@@ -53,9 +53,9 @@ if __name__ == '__main__':
     color = sys.argv[1]
     lynx = ArmController(color)
 
-    sleep(1)  # wait for setup
+    sleep(10)  # wait for setup
 
-	# lynx.wait_for_start() # Wait for Start Gun to be fired
+    # lynx.wait_for_start() # Wait for Start Gun to be fired
 
     # get state of your robot
     [q, qd] = lynx.get_state()
@@ -69,9 +69,9 @@ if __name__ == '__main__':
     print("Object twist:", twist)
 
     # get state of your opponent's robot
-    [q, qd]  = lynx.get_opponent_state()
-    print("Opponent position:",q)
-    print("Opponent velocity:",qd)
+    # [q, qd]  = lynx.get_opponent_state()
+    # print("Opponent position:",q)
+    # print("Opponent velocity:",qd)
 
     #Dynamic block test
     # setpath([0.9,0.05,np.pi/5,0,1.5,30])
@@ -97,14 +97,19 @@ if __name__ == '__main__':
 
     platform1 = []
     platform2 = []
+    goalPlatform = []
     for r in range(0, len(staticBlocks)):
         if pose[staticBlocks[r]][2, -1] < 10 and pose[staticBlocks[r]][2, -1] > 5:
             platform1.append(staticBlocks[r])
         elif pose[staticBlocks[r]][2,-1]<30 and pose[staticBlocks[r]][2,-1]>5:
             platform2.append(staticBlocks[r])
-    print("platform1:",platform1)
-    print("platform2:",platform2)
+        else:
+            goalPlatform.append(staticBlocks[r])
 
+    print("platform1   :",platform1)
+    print("platform2   :",platform2)
+    print("goalPlatform:", goalPlatform)
+    
     #Dynamic test:
     #STARTING POSE FOR DYNAMIC
     Tf=np.array([[-0.5,0,0.5,110],[0.5,0,0.5,110],[0,1,0,85],[0,0,0,1]])
@@ -152,9 +157,12 @@ if __name__ == '__main__':
     sleep(2)
     setpath([-1.4,0.3,-0.3,1.2456,-2,0])
 
-    setpath([0,0,0,0,0,0])
+    
+    # zeroPose = [0, 0, 0, 0, 0, 0]
+    # setpath(zeroPose)
 
     for i in range(0, len(platform2)):
+
         # approaching first object in platform 1
         Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
         newq = inverse(Tf, 30)
@@ -176,15 +184,17 @@ if __name__ == '__main__':
         setpath(newq)
 
         # Going towards goal position
-        setpath([-1.4, 0.3, -0.3, 1.2456, -2, 0])
+        setpath([-1.4, 0, 0, 1.5, -2, 0])
 
         # Path to first block position on goal
-        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
+        setpath([-1.4, 0.6, -0.7, np.pi/2, -np.pi/2, 0])
+        setpath([-1.4, 1.2, -1.5, 1.5, -np.pi/2, 0])
 
         # Releasing the block at the first position
-        setpath([-1.4, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+        setpath([-1.4, 1.2, -1.5, 1.5, -np.pi/2, 30])
         print("end of platform 2")
-
+    
+    
     # Getting right to the platform 1
     for i in range(0, len(platform1)):
 
@@ -217,5 +227,6 @@ if __name__ == '__main__':
         # Releasing the block at the first position
         setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
         print("end of platform 1")
-
+    
+    
     lynx.stop()
