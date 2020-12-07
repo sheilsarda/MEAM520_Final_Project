@@ -1,19 +1,20 @@
 #!/usr/bin/python2
 
-from arm_controller import ArmController
+import rospy
+
 from time import sleep
 import numpy as np
-import rospy
 import sys
 from random import random as rand
 from gripStatic import calcNewQ4
 from calcIK import inverse
 from IK_velocity import IK_velocity
-import rospy
 import sys
 from os import getcwd
 from copy import deepcopy
+
 sys.path.append(getcwd() + "/../Core")
+from arm_controller import ArmController
 
 # Function definition to set paths using command
 def setpath(finq):
