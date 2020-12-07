@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-from arm_controller import ArmController
+
 from time import sleep
 import numpy as np
 import rospy
@@ -13,6 +13,7 @@ import sys
 from os import getcwd
 from copy import deepcopy
 sys.path.append(getcwd() + "/../Core")
+from arm_controller import ArmController
 
 
 # Function definition to set paths using command
@@ -143,6 +144,7 @@ if __name__ == '__main__':
         Tf = np.array([[-0.5, 0, 0.5, 110], [0.5, 0, 0.5, 110],
                        [0, 1, 0, 75], [0, 0, 0, 1]])
         newq = inverse(Tf, 30)
+        setpath([0, 0, 0, 0, 0, 0])
         setpath(newq)
         # [name, pose, twist] = lynx.get_object_state()
         i = closestblock(color)
@@ -190,6 +192,7 @@ if __name__ == '__main__':
         setpath([0, 0, 0, 0, 0, 0])
         setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
         setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+        setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 30])
         avail_blocks = avail_dyn()
 
 
