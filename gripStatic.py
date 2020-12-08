@@ -107,6 +107,18 @@ def zRot3x3(angle):
                      [s,    c,  0.0],
                      [0.0, 0.0, 1.0]])
 
+'''def xRot3x3(angle):
+    """
+    Z-Axis Rotation
+        Parameter: angle - scalar (in radians)
+        Output:    3x3 Z-Rotation matrx based on the input
+    """
+    s = math.sin(angle)
+    c = math.cos(angle)
+    return np.array([[1.0, 0.0, 0.0]
+                     [0.0,  c,   -s],
+                     [0.0,  s,    c]])'''
+
 def clampToLims(val, adjust, lowerLim, upperLim):
     """
     Check if a scalar is within a certain range, shifts it by a given adjustment value if not
@@ -122,7 +134,31 @@ def clampToLims(val, adjust, lowerLim, upperLim):
     if val <= lowerLim: return (val + adjust)
     return val
 
-def calcNewQ4(q, pose, color,a):
+def inRange(FK, origin, p2, blockDir):
+    # print(origin)
+    # print(p2)
+    # print(blockDir)
+    p1 = origin.copy()
+    p1[2] += FK.L1
+
+    fromAbove = p2.copy()
+    fromAbove[2] += (FK.L4 + FK.L5 + 10.0)
+    top = (np.linalg.norm(fromAbove - p1) < (FK.L2 + FK.L3))
+    # print("Top - p1: " + str(p1) + ", p2: " + str(fromAbove))
+    
+    p1 += (FK.L2 * math.sin(FK.upperLim[0, 1]) * blockDir)
+    p1[2] += (FK.L2 * math.cos(FK.upperLim[0, 1]))
+
+    fromSide = p2 - ((FK.L4 + FK.L5 + 10.0) * blockDir)
+    side = (np.linalg.norm(fromSide - p1) < FK.L3)
+    # print("Side - p1: " + str(p1) + ", p2: " + str(fromSide))
+
+    if not top and not side:
+        return top, side, normalize(p2 - p1)
+
+    return top, side, blockDir
+
+def calcNewQ4(q, pose, color, a):
     """
     Calculates the new joint(4) position to align robot end effector with a cube
         Parameters:
@@ -137,20 +173,22 @@ def calcNewQ4(q, pose, color,a):
     # q4 = -np.pi / 2.0 : least liklihood of collision as long as pos can be reached
 
      # Test Prints
-    print("Cube:")
-    print(pose)
+    '''print("Cube:")
+    print(pose)'''
 
     # FK only used for limits, maybe hardcode it instead
     FK = calculateFK()
 
     # Get projected end effector rotation, using current q4
     if color is "red":
+        cons = 200
         origin = np.array([-200.0, -200.0, 0.0])
         startDir = np.array([1.0, 0.0, 0.0])
         effectorDown = np.array([[1.0,  0.0,  0.0],
                                  [0.0, -1.0,  0.0],
                                  [0.0,  0.0, -1.0]])
     else:
+        cons = -200
         origin = np.array([200.0, 200.0, 0.0])
         startDir = np.array([-1.0, 0.0, 0.0])
         effectorDown = np.array([[-1.0, 0.0,  0.0],
@@ -170,10 +208,33 @@ def calcNewQ4(q, pose, color,a):
     # - and combine to get projectect T pre-consideration of the block
     T = roboRot.dot(effectorDown)
 
+    top, side, ref = inRange(FK, origin, np.copy(pose[:3, 3]), blockDir)
+    # print("Top: " + str(top) + ",  Side: " + str(side))
+    if not top:
+        y = np.array([0.0, 0.0, 1.0])
+        
+        if not side:
+            x = normalize(np.cross(y, ref))
+            y = normalize(np.cross(ref, x))
+
+            pAngle = pose[:3, 3] - a * ref
+            return np.array([[x[0], y[0], ref[0], pAngle[0] + cons],
+                             [x[1], y[1], ref[1], pAngle[1] + cons],
+                             [x[2], y[2], ref[2],    pAngle[2]],
+                             [0.0,  0.0,     0.0,        1.0]])
+        
+        x = normalize(np.cross(y, blockDir))
+        return np.array([[x[0],  y[0], blockDir[0], pose[0,3] + cons],
+                         [x[1],  y[1], blockDir[1], pose[1,3] + cons],
+                         [x[2],  y[2], blockDir[2],  pose[2,3] + a],
+                         [0.0,    0.0,     0.0,           1.0]])
+
+
+
     # Use projected-T as a comparison to calc the smallest necessary motion
     #   if we dont care about smallest motion, just use original effectorDown instead
     dq4 = checkCubeAngle(pose, jointR=T[:3, :3])
-    print(dq4)
+    # print(dq4)
 
     q4 = clampToLims(q[4] + dq4, np.pi / 2.0, FK.lowerLim[0, 4], FK.upperLim[0, 4])
 
@@ -188,22 +249,17 @@ def calcNewQ4(q, pose, color,a):
     if abs(dotX) > 0.8:
         q4 = clampToLims(q4 - np.pi / 2.0, np.pi, FK.lowerLim[0, 4], FK.upperLim[0, 4])
         Te = T.dot(zRot3x3(q4 - q[4]))
-        print("yeah")
+        # print("yeah")
 
     # Test Prints
-    print("Robot")
-    print(Te)
-    if color == "red":
-        cons=200
-    else:
-        cons=-200
+    '''print("Robot")
+    print(Te)'''
     # return newQ
-    return np.array([[Te[0,0], Te[0,1], Te[0,2],    pose[0,3]+cons],
-                     [Te[1,0], Te[1,1], Te[1,2],    pose[1,3]+cons],
+    return np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3]+cons],
+                     [Te[1,0], Te[1,1], Te[1,2], pose[1,3]+cons],
                      [Te[2,0], Te[2,1], Te[2,2], pose[2,3] + a],
                      [0.0,       0.0,     0.0,         1.0]])
 
 
 # TODO - SIDEBONUS method might only work in one direction
 # TODO - another rotation adjustment needed if the newQ result clashes with another block
-
