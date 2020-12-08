@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     sleep(1)  # wait for setup
 
-    # lynx.wait_for_start() # Wait for Start Gun to be fired
+    lynx.wait_for_start() # Wait for Start Gun to be fired
 
     # get state of your robot
     [q, qd] = lynx.get_state()
