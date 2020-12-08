@@ -134,7 +134,7 @@ def clampToLims(val, adjust, lowerLim, upperLim):
     if val <= lowerLim: return (val + adjust)
     return val
 
-def inRange(FK, origin, p2, blockDir):
+def inRange(FK, origin, p2, blockDir, a0):
     # print(origin)
     # print(p2)
     # print(blockDir)
@@ -142,14 +142,14 @@ def inRange(FK, origin, p2, blockDir):
     p1[2] += FK.L1
 
     fromAbove = p2.copy()
-    fromAbove[2] += (FK.L4 + FK.L5 + 10.0)
-    top = (np.linalg.norm(fromAbove - p1) < (FK.L2 + FK.L3 - 10.0))
+    fromAbove[2] += (FK.L4 + FK.L5 + a0)
+    top = (np.linalg.norm(fromAbove - p1) < (FK.L2 + FK.L3))
     # print("Top - p1: " + str(p1) + ", p2: " + str(fromAbove))
     
     p1 += (FK.L2 * math.sin(FK.upperLim[0, 1]) * blockDir)
     p1[2] += (FK.L2 * math.cos(FK.upperLim[0, 1]))
 
-    fromSide = p2 - ((FK.L4 + FK.L5 + 10.0) * blockDir)
+    fromSide = p2 - ((FK.L4 + FK.L5 + (a0 - 5.0)) * blockDir)
     side = (np.linalg.norm(fromSide - p1) < FK.L3)
     # print("Side - p1: " + str(p1) + ", p2: " + str(fromSide))
 
@@ -158,6 +158,11 @@ def inRange(FK, origin, p2, blockDir):
 
     return top, side, blockDir
 
+def buildMat(x, y, z, locX, locY, locZ):
+    return np.array([[x[0],  y[0], z[0], locX],
+                     [x[1],  y[1], z[1], locY],
+                     [x[2],  y[2], z[2], locZ],
+                     [0.0,   0.0,  0.0,  1.0]])
 
 def getSideMat(z, loc, color, cons, a, angled=False):
     y = np.array([0.0, 0.0, 1.0])
@@ -166,19 +171,22 @@ def getSideMat(z, loc, color, cons, a, angled=False):
     if angled:
         y = normalize(np.cross(z, x))
     
-    locOffset = loc - a * z
-    TFinal = np.array([[x[0],  y[0], z[0], locOffset[0] + cons],
-                       [x[1],  y[1], z[1], locOffset[1] + cons],
-                       [x[2],  y[2], z[2],    locOffset[2]],
-                       [0.0,   0.0,  0.0,          1.0]])
+    locOffsetA = loc - (a[0] - 5.0) * z
+    TFinalA = buildMat(x, y, z, locOffsetA[0] + cons, locOffsetA[1] + cons, locOffsetA[2])
+    
+    TFinalB = None
+    if a[0] != a[1]:
+        locOffsetB = loc - a[1] * z
+        TFinalB = buildMat(x, y, z, locOffsetB[0] + cons, locOffsetB[1] + cons, locOffsetB[2])
 
     if color == "red":
-        return TFinal
+        return TFinalA, TFinalB
     else:
-        return zRot(np.pi).dot(TFinal)
+        rot = zRot(np.pi)
+        return rot.dot(TFinalA), rot.dot(TFinalB)
 
 
-def horizontalAngle(location, color):
+def horizontalAngle(location, color, a=[0.0, 0.0]):
     if color == "red":
         cons = 200
         origin = np.array([-200.0, -200.0, 0.0])
@@ -187,7 +195,7 @@ def horizontalAngle(location, color):
         origin = np.array([200.0, 200.0, 0.0])
 
     z = normalize(np.subtract(np.array([location[0], location[1], 0.0]), origin))
-    return getSideMat(z, location, color, cons, 0.0)
+    return getSideMat(z, location, color, cons, a)
 
 # Option 2
 def calcNewQ4(q, pose, color, a):
@@ -233,15 +241,17 @@ def calcNewQ4(q, pose, color, a):
     blockDir = normalize(np.subtract(blockO, origin))
 
     # -- (confirm reach of robot)
-    top, side, ref = inRange(FK, origin, np.copy(pose[:3, 3]), blockDir)
-    if not top:
+    location = np.copy(pose[:3, 3])
+    top1, side1, ref = inRange(FK, origin, location, blockDir, a[0])
+    top2, side2, _   = inRange(FK, origin, location, blockDir, a[1])
+    if not (top1 and top2):
         # If it can not come from above
-        if not side:
+        if not (side1 and side2):
             # print("Diagonal")
-            return getSideMat(ref, pose[:3, 3], color, cons, a, angled=True)
+            return getSideMat(ref, location, color, cons, a, angled=True)
         
         # print("Side")
-        return getSideMat(blockDir, pose[:3, 3], color, cons, a)
+        return getSideMat(blockDir, location, color, cons, a)
 
     # print("Top")
 
@@ -269,14 +279,19 @@ def calcNewQ4(q, pose, color, a):
         Te = T.dot(zRot3x3(q4 - q[4]))
 
     
-    TFinal = np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3] + cons],
-                       [Te[1,0], Te[1,1], Te[1,2], pose[1,3] + cons],
-                       [Te[2,0], Te[2,1], Te[2,2],  pose[2,3] + a],
-                       [0.0,       0.0,     0.0,         1.0]])
+    TFinalA = np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3] + cons],
+                        [Te[1,0], Te[1,1], Te[1,2], pose[1,3] + cons],
+                        [Te[2,0], Te[2,1], Te[2,2],  pose[2,3] + a[0]],
+                        [0.0,       0.0,     0.0,         1.0]])
+    TFinalB = np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3] + cons],
+                        [Te[1,0], Te[1,1], Te[1,2], pose[1,3] + cons],
+                        [Te[2,0], Te[2,1], Te[2,2],  pose[2,3] + a[1]],
+                        [0.0,       0.0,     0.0,         1.0]])
     if color == "red":
-        return TFinal
+        return TFinalA, TFinalB
     else:
-        return zRot(np.pi).dot(TFinal)
+        rot = zRot(np.pi)
+        return rot.dot(TFinalA), rot.dot(TFinalB)
 
 # TODO - SIDEBONUS method might only work in one direction
 # TODO - another rotation adjustment needed if the newQ result clashes with another block

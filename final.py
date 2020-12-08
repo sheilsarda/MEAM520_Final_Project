@@ -5,7 +5,7 @@ import numpy as np
 import rospy
 import sys
 from random import random as rand
-from gripStatic import calcNewQ4
+from gripStatic import calcNewQ4, horizontalAngle
 from calcIK import inverse
 import rospy
 import sys
@@ -201,75 +201,91 @@ if __name__ == '__main__':
     #     setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 30])
     #     avail_blocks = avail_dyn()
 
+    if color == "red":
+        goalPos = np.array([-75.0, -475.0, 50.0])
+    else:
+        goalPos = np.array([75.0, 475.0, 50.0])
+
+    currStack = 0
 
     for i in range(0, len(platform2)):
 
-        # approaching first object in platform 1
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
-        print(Tf)
-        newq = inverse(Tf, 30)
+        TfA, TfB = calcNewQ4(q, pose[platform2[i]], color, [10.0, 60.0])
+        print(TfB)
+        print(TfA)
+        
+        # approaching first object in platform 2
+        newq = inverse(TfB, 30)
         setpath(newq)
 
-        # lower to pick up block from platform 1
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
-        print(Tf)
-        newq = inverse(Tf, 30)
+        # lower to pick up block from platform 2
+        newq = inverse(TfA, 30)
         setpath(newq)
 
         # grasp
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
-        print(Tf)
-        newq = inverse(Tf, 0)
+        newq = inverse(TfA, 0)
         setpath(newq)
 
-        # pick up 120mm above
-        Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
-        print(Tf)
-        newq = inverse(Tf, 0)
+        # pick up 120mm above or side
+        newq = inverse(TfB, 0)
         setpath(newq)
 
         # Going towards goal position
-        setpath([-1.4, 0, 0, 1.5, -2, 0])
+        TgA, TgB = horizontalAngle(np.array([goalPos[0], goalPos[1], goalPos[2] + currStack * 20.0]), color, [0.0, 40.0])
+        newq = inverse(TgA, 0)
+        setpath(newq)
 
-        # Path to first block position on goal
-        setpath([-1.4, 0.6, -0.7, np.pi/2, -np.pi/2, 0])
-        setpath([-1.4, 1.2, -1.5, 1.5, -np.pi/2, 0])
+        # Releasing the block at the position
+        newq = inverse(TgA, 30)
+        setpath(newq)
+        newq = inverse(TgB, 30)
+        setpath(newq)
 
-        # Releasing the block at the first position
-        setpath([-1.4, 1.2, -1.5, 1.5, -np.pi/2, 30])
+        newq[1] -= 0.2
+        setpath(newq)
+        currStack += 1
+        q = newq
         print("end of platform 2")
 
     # Getting right to the platform 1
     for i in range(0, len(platform1)):
 
+        TfA, TfB = calcNewQ4(q, pose[platform1[i]], color, [10.0, 60.0])
+        print(TfB)
+        print(TfA)
+        
         # approaching first object in platform 1
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
-        newq = inverse(Tf, 30)
+        newq = inverse(TfB, 30)
         setpath(newq)
 
         # lower to pick up block from platform 1
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
-        newq = inverse(Tf, 30)
+        newq = inverse(TfA, 30)
         setpath(newq)
 
         # grasp
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 10)
-        newq = inverse(Tf, 0)
+        newq = inverse(TfA, 0)
         setpath(newq)
 
-        # pick up 120mm above
-        Tf = calcNewQ4(q, pose[platform1[i]], color, 60)
-        newq = inverse(Tf, 0)
+        # pick up 120mm above or side
+        newq = inverse(TfB, 0)
         setpath(newq)
 
         # Going towards goal position
-        setpath([-1.1, 0.3, -0.3, 1.2456, -2, 0])
+        TgA, TgB = horizontalAngle(np.array([goalPos[0], goalPos[1], goalPos[2] + currStack * 20.0]), color, [0.0, 40.0])
+        newq = inverse(TgA, 0)
+        setpath(newq)
 
-        # Path to first block position on goal
-        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
+        # Releasing the block at the position
+        newq = inverse(TgA, 30)
+        setpath(newq)
+        newq = inverse(TgB, 30)
+        setpath(newq)
 
-        # Releasing the block at the first position
-        setpath([-1.2, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+        newq[1] -= 0.2
+        setpath(newq)
+        currStack += 1
+        q = newq
         print("end of platform 1")
 
     lynx.stop()
+
