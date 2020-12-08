@@ -143,7 +143,7 @@ def inRange(FK, origin, p2, blockDir):
 
     fromAbove = p2.copy()
     fromAbove[2] += (FK.L4 + FK.L5 + 10.0)
-    top = (np.linalg.norm(fromAbove - p1) < (FK.L2 + FK.L3))
+    top = (np.linalg.norm(fromAbove - p1) < (FK.L2 + FK.L3 - 10.0))
     # print("Top - p1: " + str(p1) + ", p2: " + str(fromAbove))
     
     p1 += (FK.L2 * math.sin(FK.upperLim[0, 1]) * blockDir)
@@ -180,7 +180,7 @@ def calcNewQ4(q, pose, color, a):
     FK = calculateFK()
 
     # Get projected end effector rotation, using current q4
-    if color is "red":
+    if color == "red":
         cons = 200
         origin = np.array([-200.0, -200.0, 0.0])
         startDir = np.array([1.0, 0.0, 0.0])
@@ -207,6 +207,7 @@ def calcNewQ4(q, pose, color, a):
 
     # - and combine to get projectect T pre-consideration of the block
     T = roboRot.dot(effectorDown)
+    print("origin " + str(origin))
 
     top, side, ref = inRange(FK, origin, np.copy(pose[:3, 3]), blockDir)
     # print("Top: " + str(top) + ",  Side: " + str(side))
@@ -216,19 +217,35 @@ def calcNewQ4(q, pose, color, a):
         if not side:
             x = normalize(np.cross(y, ref))
             y = normalize(np.cross(ref, x))
+            print("Diagonal")
+            print("origin " + str(origin))
+            print("block " + str(blockO))
+            print("blockD " + str(blockDir))
+            print("ref " + str(ref))
 
             pAngle = pose[:3, 3] - a * ref
+            pAngle = pose[:3, 3] - a * blockDir
+            p = np.array([pAngle[0]+cons, pAngle[1] + cons, pAngle[2]])
+            if color == "blue":
+                p = zRot3x3(np.pi).dot(p)
             return np.array([[x[0], y[0], ref[0], pAngle[0] + cons],
                              [x[1], y[1], ref[1], pAngle[1] + cons],
                              [x[2], y[2], ref[2],    pAngle[2]],
                              [0.0,  0.0,     0.0,        1.0]])
         
+        print("Side")
         x = normalize(np.cross(y, blockDir))
-        return np.array([[x[0],  y[0], blockDir[0], pose[0,3] + cons],
-                         [x[1],  y[1], blockDir[1], pose[1,3] + cons],
-                         [x[2],  y[2], blockDir[2],  pose[2,3] + a],
-                         [0.0,    0.0,     0.0,           1.0]])
+        
+        pAngle = pose[:3, 3] - a * blockDir
+        p = np.array([pAngle[0,3]+cons, pAngle[1,3] + cons, pose[2, 3]])
+        if color == "blue":
+            p = zRot3x3(np.pi).dot(p)
+        return np.array([[x[0],  y[0], blockDir[0],  p[0]],
+                         [x[1],  y[1], blockDir[1],  p[1]],
+                         [x[2],  y[2], blockDir[2],  p[2]],
+                         [0.0,    0.0,     0.0,        1.0]])
 
+    print("Top")
 
 
     # Use projected-T as a comparison to calc the smallest necessary motion
@@ -254,11 +271,14 @@ def calcNewQ4(q, pose, color, a):
     # Test Prints
     '''print("Robot")
     print(Te)'''
+    p = np.array([pose[0,3]+cons, pose[1,3] + cons, pose[2, 3] + a])
+    if color == "blue":
+        p = zRot3x3(np.pi).dot(p)
     # return newQ
-    return np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3]+cons],
-                     [Te[1,0], Te[1,1], Te[1,2], pose[1,3]+cons],
-                     [Te[2,0], Te[2,1], Te[2,2], pose[2,3] + a],
-                     [0.0,       0.0,     0.0,         1.0]])
+    return np.array([[Te[0,0], Te[0,1], Te[0,2], p[0,3]],
+                     [Te[1,0], Te[1,1], Te[1,2], p[1,3]],
+                     [Te[2,0], Te[2,1], Te[2,2], p[2,3]],
+                     [0.0,       0.0,     0.0,     1.0]])
 
 
 # TODO - SIDEBONUS method might only work in one direction

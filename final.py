@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     sleep(1)  # wait for setup
 
-    lynx.wait_for_start() # Wait for Start Gun to be fired
+    #lynx.wait_for_start() # Wait for Start Gun to be fired
 
     # get state of your robot
     [q, qd] = lynx.get_state()
@@ -144,83 +144,87 @@ if __name__ == '__main__':
     print("goalPlatform:", goalPlatform)
 
     # Dynamic test:
-    while len(avail_dyn()) > 0:
-        Tf = np.array([[-0.5, 0, 0.5, 110], [0.5, 0, 0.5, 110],
-                       [0, 1, 0, 75], [0, 0, 0, 1]])
-        newq = inverse(Tf, 30)
-        setpath([0, 0, 0, 0, 0, 0])
-        setpath(newq)
-        # [name, pose, twist] = lynx.get_object_state()
-        i = closestblock(color)
-        print("index:", i)
-        chosen_block = dynamicBlocks[i]
-        rost = rospy.get_time()
-        A = np.sqrt(2*(200**2))
-        block_r = np.sqrt(pose[chosen_block][0, -1] **
-                          2+pose[chosen_block][1, -1]**2)
-        # Setting position within 30 mm to blocks
-        block_offset = (A-(block_r+50))/np.sqrt(2)
-        Tf_bl = deepcopy(Tf)
-        Tf_bl[0, -1] = block_offset
-        Tf_bl[1, -1] = block_offset
-        newq = inverse(Tf_bl, 30)
-        setpath(newq)
-        t0e = pose[chosen_block]
-        btheta = np.arctan2(t0e[1, -1], t0e[0, -1])
-        # Setting position to scoop up and go 10 mm ahead
-        block_offset = (A-(block_r-5))/np.sqrt(2)
-        Tf_bl1 = deepcopy(Tf)
-        Tf_bl1[0, -1] = block_offset
-        Tf_bl1[1, -1] = block_offset
-        Tf_bl1[2, -1] = 70
-        newq = inverse(Tf_bl1, 30)
-        cur_block_ang = np.arctan2(
-            pose[chosen_block][1, -1], pose[chosen_block][0, -1])
-        if cur_block_ang < 0:
-            cur_block_ang += np.pi
-        while cur_block_ang <= ((5*np.pi)/4)-0.05:
-            _, pose, _ = lynx.get_object_state()
-            # print(np.arctan2(pose[chosen_block][1,-1],pose[chosen_block][0,-1]))
-            cur_block_ang = np.arctan2(
-                pose[chosen_block][1, -1], pose[chosen_block][0, -1])
-            if cur_block_ang < 0:
-                cur_block_ang += 2*np.pi
-            print("waiting for block")
-        setpath(newq)
-        newq = inverse(Tf_bl1, 0)
-        setpath(newq)
-        Tf_bl2 = deepcopy(Tf_bl1)
-        Tf_bl2[2, -1] = 110
-        newq = inverse(Tf_bl2, 0)
-        setpath(newq)
-        setpath([0, 0, 0, 0, 0, 0])
-        setpath([-1.3, 0, 0, 0, 0, 0])
-        setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 0])
-        setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
-        setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
-        setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 30])
-        avail_blocks = avail_dyn()
+    # while len(avail_dyn()) > 0:
+    #     Tf = np.array([[-0.5, 0, 0.5, 110], [0.5, 0, 0.5, 110],
+    #                    [0, 1, 0, 75], [0, 0, 0, 1]])
+    #     newq = inverse(Tf, 30)
+    #     setpath([0, 0, 0, 0, 0, 0])
+    #     setpath(newq)
+    #     # [name, pose, twist] = lynx.get_object_state()
+    #     i = closestblock(color)
+    #     print("index:", i)
+    #     chosen_block = dynamicBlocks[i]
+    #     rost = rospy.get_time()
+    #     A = np.sqrt(2*(200**2))
+    #     block_r = np.sqrt(pose[chosen_block][0, -1] **
+    #                       2+pose[chosen_block][1, -1]**2)
+    #     # Setting position within 30 mm to blocks
+    #     block_offset = (A-(block_r+50))/np.sqrt(2)
+    #     Tf_bl = deepcopy(Tf)
+    #     Tf_bl[0, -1] = block_offset
+    #     Tf_bl[1, -1] = block_offset
+    #     newq = inverse(Tf_bl, 30)
+    #     setpath(newq)
+    #     t0e = pose[chosen_block]
+    #     btheta = np.arctan2(t0e[1, -1], t0e[0, -1])
+    #     # Setting position to scoop up and go 10 mm ahead
+    #     block_offset = (A-(block_r-5))/np.sqrt(2)
+    #     Tf_bl1 = deepcopy(Tf)
+    #     Tf_bl1[0, -1] = block_offset
+    #     Tf_bl1[1, -1] = block_offset
+    #     Tf_bl1[2, -1] = 70
+    #     newq = inverse(Tf_bl1, 30)
+    #     cur_block_ang = np.arctan2(
+    #         pose[chosen_block][1, -1], pose[chosen_block][0, -1])
+    #     if cur_block_ang < 0:
+    #         cur_block_ang += np.pi
+    #     while cur_block_ang <= ((5*np.pi)/4)-0.05:
+    #         _, pose, _ = lynx.get_object_state()
+    #         # print(np.arctan2(pose[chosen_block][1,-1],pose[chosen_block][0,-1]))
+    #         cur_block_ang = np.arctan2(
+    #             pose[chosen_block][1, -1], pose[chosen_block][0, -1])
+    #         if cur_block_ang < 0:
+    #             cur_block_ang += 2*np.pi
+    #         print("waiting for block")
+    #     setpath(newq)
+    #     newq = inverse(Tf_bl1, 0)
+    #     setpath(newq)
+    #     Tf_bl2 = deepcopy(Tf_bl1)
+    #     Tf_bl2[2, -1] = 110
+    #     newq = inverse(Tf_bl2, 0)
+    #     setpath(newq)
+    #     setpath([0, 0, 0, 0, 0, 0])
+    #     setpath([-1.3, 0, 0, 0, 0, 0])
+    #     setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 0])
+    #     setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
+    #     setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
+    #     setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 30])
+    #     avail_blocks = avail_dyn()
 
 
     for i in range(0, len(platform2)):
 
         # approaching first object in platform 1
         Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
+        print(Tf)
         newq = inverse(Tf, 30)
         setpath(newq)
 
         # lower to pick up block from platform 1
         Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
+        print(Tf)
         newq = inverse(Tf, 30)
         setpath(newq)
 
         # grasp
         Tf = calcNewQ4(q, pose[platform2[i]], color, 10)
+        print(Tf)
         newq = inverse(Tf, 0)
         setpath(newq)
 
         # pick up 120mm above
         Tf = calcNewQ4(q, pose[platform2[i]], color, 60)
+        print(Tf)
         newq = inverse(Tf, 0)
         setpath(newq)
 
