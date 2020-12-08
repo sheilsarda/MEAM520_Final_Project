@@ -7,7 +7,6 @@ import sys
 from random import random as rand
 from gripStatic import calcNewQ4
 from calcIK import inverse
-from IK_velocity import IK_velocity
 import rospy
 import sys
 from os import getcwd
