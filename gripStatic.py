@@ -158,6 +158,153 @@ def inRange(FK, origin, p2, blockDir):
 
     return top, side, blockDir
 
+# def calcNewQ4(q, pose, color, a):
+#     """
+#     Calculates the new joint(4) position to align robot end effector with a cube
+#         Parameters:
+#             q,       1x6 vector of joint inputs [q0,q1,q2,q3,q4,lg]
+#                         MAYBE take in FK's output if that's been calculated outside
+#             pose     4x4 matrix defining the current cube pos and orientation
+#             color    string, either blue or red
+#         Output:
+#             4x4 matrix of desired T0e to align robot 30 units above a cube
+#     """
+#     # REMINDER? - if IK shows this rotation can not be reached, should prob just make
+#     # q4 = -np.pi / 2.0 : least liklihood of collision as long as pos can be reached
+
+#      # Test Prints
+#     '''print("Cube:")
+#     print(pose)'''
+
+#     # FK only used for limits, maybe hardcode it instead
+#     FK = calculateFK()
+
+#     # Get projected end effector rotation, using current q4
+#     if color == "red":
+#         cons = 200
+#         origin = np.array([-200.0, -200.0, 0.0])
+#         startDir = np.array([1.0, 0.0, 0.0])
+#         effectorDown = np.array([[1.0,  0.0,  0.0],
+#                                  [0.0, -1.0,  0.0],
+#                                  [0.0,  0.0, -1.0]])
+#     else:
+#         cons = -200
+#         origin = np.array([200.0, 200.0, 0.0])
+#         startDir = np.array([-1.0, 0.0, 0.0])
+#         effectorDown = np.array([[-1.0, 0.0,  0.0],
+#                                  [0.0,  1.0,  0.0],
+#                                  [0.0,  0.0, -1.0]])
+#     # - getting Frame 5 w.r.t. downwards-facing Frame 4 and q0 = 0
+#     np.dot(effectorDown, zRot3x3(q[4]), out=effectorDown)
+#     # print(effectorDown)
+
+#     # - getting rotation that angles the robot to the block
+#     blockO = np.array([pose[0, 3], pose[1, 3], 0.0])
+#     blockDir = normalize(np.subtract(blockO, origin))
+
+#     angle, direction = angularDifference(startDir, blockDir, 2)
+#     roboRot = zRot3x3(direction * angle)
+
+#     # - and combine to get projectect T pre-consideration of the block
+#     T = roboRot.dot(effectorDown)
+#     print("origin " + str(origin))
+
+#     top, side, ref = inRange(FK, origin, np.copy(pose[:3, 3]), blockDir)
+#     # print("Top: " + str(top) + ",  Side: " + str(side))
+#     if not top:
+#         y = np.array([0.0, 0.0, 1.0])
+        
+#         if not side:
+#             x = normalize(np.cross(y, ref))
+#             y = normalize(np.cross(ref, x))
+#             print("Diagonal")
+#             print("origin " + str(origin))
+#             print("block " + str(blockO))
+#             print("blockD " + str(blockDir))
+#             print("ref " + str(ref))
+
+#             pAngle = pose[:3, 3] - a * ref
+#             pAngle = pose[:3, 3] - a * blockDir
+#             p = np.array([pAngle[0] + cons, pAngle[1] + cons, pAngle[2]])
+#             if color == "blue":
+#                 p = zRot3x3(np.pi).dot(p)
+#             return np.array([[x[0], y[0], ref[0], p[0]],
+#                              [x[1], y[1], ref[1], p[1]],
+#                              [x[2], y[2], ref[2], p[2]],
+#                              [0.0,  0.0,     0.0, 1.0]])
+        
+#         print("Side")
+#         x = normalize(np.cross(y, blockDir))
+        
+#         pAngle = pose[:3, 3] - a * blockDir
+#         p = np.array([pAngle[0] + cons, pAngle[1] + cons, pose[2, 3]])
+#         if color == "blue":
+#             p = zRot3x3(np.pi).dot(p)
+#         return np.array([[x[0],  y[0], blockDir[0],  p[0]],
+#                          [x[1],  y[1], blockDir[1],  p[1]],
+#                          [x[2],  y[2], blockDir[2],  p[2]],
+#                          [0.0,    0.0,     0.0,        1.0]])
+
+#     print("Top")
+
+
+#     # Use projected-T as a comparison to calc the smallest necessary motion
+#     #   if we dont care about smallest motion, just use original effectorDown instead
+#     dq4 = checkCubeAngle(pose, jointR=T[:3, :3])
+#     # print(dq4)
+
+#     q4 = clampToLims(q[4] + dq4, np.pi / 2.0, FK.lowerLim[0, 4], FK.upperLim[0, 4])
+
+#     # SIDEBONUS: Check new transformation of end effector
+#     Te = T.dot(zRot3x3(q4 - q[4]))
+#     #print(T2)
+
+#     # Want to rotate so that the grips do not overlap the cube's white face...
+#     dotX = np.dot(Te[:, 0], pose[:3, 2])
+
+#     # So if the cube's z axis is parallel to the end effector's x axis, shift by 90 degrees
+#     if abs(dotX) > 0.8:
+#         q4 = clampToLims(q4 - np.pi / 2.0, np.pi, FK.lowerLim[0, 4], FK.upperLim[0, 4])
+#         Te = T.dot(zRot3x3(q4 - q[4]))
+#         # print("yeah")
+
+#     # Test Prints
+#     '''print("Robot")
+#     print(Te)'''
+#     p = np.array([pose[0,3]+cons, pose[1,3] + cons, pose[2, 3] + a])
+#     if color == "blue":
+#         p = zRot3x3(np.pi).dot(p)
+#     # return newQ
+    
+#     return np.array([[Te[0,0], Te[0,1], Te[0,2], p[0]],
+#                      [Te[1,0], Te[1,1], Te[1,2], p[1]],
+#                      [Te[2,0], Te[2,1], Te[2,2], p[2]],
+#                      [0.0,       0.0,     0.0,     1.0]])
+
+def horizontalAngle(location, color):
+    if color == "red":
+        cons = 200
+        origin = np.array([-200.0, -200.0, 0.0])
+    else:
+        cons = -200
+        rotFix = zRot(np.pi)
+        origin = np.array([200.0, 200.0, 0.0])
+
+    z = normalize(np.subtract(np.array([location[0], location[1], 0.0]), origin))
+    y = np.array([0.0, 0.0, 1.0])
+    x = normalize(np.cross(y, z))
+
+    TFinal = np.array([[x[0],  y[0], z[0],  location[0] + cons],
+                       [x[1],  y[1], z[1],  location[1] + cons],
+                       [x[2],  y[2], z[2],  location[2]],
+                       [0.0,    0.0,  0.0,       1.0]])
+
+    if color == "red":
+        return TFinal
+    else:
+        return rotFix.dot(TFinal)
+
+# Option 2
 def calcNewQ4(q, pose, color, a):
     """
     Calculates the new joint(4) position to align robot end effector with a cube
@@ -189,6 +336,7 @@ def calcNewQ4(q, pose, color, a):
                                  [0.0,  0.0, -1.0]])
     else:
         cons = -200
+        rotFix = zRot(np.pi)
         origin = np.array([200.0, 200.0, 0.0])
         startDir = np.array([-1.0, 0.0, 0.0])
         effectorDown = np.array([[-1.0, 0.0,  0.0],
@@ -224,26 +372,29 @@ def calcNewQ4(q, pose, color, a):
             print("ref " + str(ref))
 
             pAngle = pose[:3, 3] - a * ref
-            pAngle = pose[:3, 3] - a * blockDir
-            p = np.array([pAngle[0]+cons, pAngle[1] + cons, pAngle[2]])
-            if color == "blue":
-                p = zRot3x3(np.pi).dot(p)
-            return np.array([[x[0], y[0], ref[0], pAngle[0] + cons],
-                             [x[1], y[1], ref[1], pAngle[1] + cons],
-                             [x[2], y[2], ref[2],    pAngle[2]],
-                             [0.0,  0.0,     0.0,        1.0]])
+            TFinal = np.array([[x[0], y[0], ref[0], pAngle[0] + cons],
+                               [x[1], y[1], ref[1], pAngle[1] + cons],
+                               [x[2], y[2], ref[2],    pAngle[2]],
+                               [0.0,  0.0,     0.0,       1.0]])
+
+            if color == "red":
+                return TFinal
+            else:
+                return rotFix.dot(TFinal)
         
         print("Side")
         x = normalize(np.cross(y, blockDir))
         
         pAngle = pose[:3, 3] - a * blockDir
-        p = np.array([pAngle[0,3]+cons, pAngle[1,3] + cons, pose[2, 3]])
-        if color == "blue":
-            p = zRot3x3(np.pi).dot(p)
-        return np.array([[x[0],  y[0], blockDir[0],  p[0]],
-                         [x[1],  y[1], blockDir[1],  p[1]],
-                         [x[2],  y[2], blockDir[2],  p[2]],
-                         [0.0,    0.0,     0.0,        1.0]])
+        TFinal = np.array([[x[0],  y[0], blockDir[0],  pAngle[0] + cons],
+                           [x[1],  y[1], blockDir[1],  pAngle[1] + cons],
+                           [x[2],  y[2], blockDir[2],     pose[2, 3]],
+                           [0.0,    0.0,     0.0,            1.0]])
+
+        if color == "red":
+            return TFinal
+        else:
+            return rotFix.dot(TFinal)
 
     print("Top")
 
@@ -271,15 +422,16 @@ def calcNewQ4(q, pose, color, a):
     # Test Prints
     '''print("Robot")
     print(Te)'''
-    p = np.array([pose[0,3]+cons, pose[1,3] + cons, pose[2, 3] + a])
-    if color == "blue":
-        p = zRot3x3(np.pi).dot(p)
     # return newQ
-    return np.array([[Te[0,0], Te[0,1], Te[0,2], p[0,3]],
-                     [Te[1,0], Te[1,1], Te[1,2], p[1,3]],
-                     [Te[2,0], Te[2,1], Te[2,2], p[2,3]],
-                     [0.0,       0.0,     0.0,     1.0]])
-
+    
+    TFinal = np.array([[Te[0,0], Te[0,1], Te[0,2], pose[0,3] + cons],
+                       [Te[1,0], Te[1,1], Te[1,2], pose[1,3] + cons],
+                       [Te[2,0], Te[2,1], Te[2,2],  pose[2,3] + a],
+                       [0.0,       0.0,     0.0,         1.0]])
+    if color == "red":
+        return TFinal
+    else:
+        return rotFix.dot(TFinal)
 
 # TODO - SIDEBONUS method might only work in one direction
 # TODO - another rotation adjustment needed if the newQ result clashes with another block
