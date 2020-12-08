@@ -53,7 +53,12 @@ def closestblock(color):
         else:
             ang_diff[r] = ((np.pi)/4-0.05)-block_ang[r]
     print("available blocks", ang_diff)
-    i = np.argmin([b for b in ang_diff if b >= 0])
+    #i=np.argmin([b for b in ang_diff if b>=0])
+    pos_vals = np.array([b for b in ang_diff if b>=0])
+    if len(pos_vals)>0:
+        i=np.argmin([b for b in ang_diff if b>=0])
+    else:
+        i=np.argmax(ang_diff)
     print("chosen", ang_diff[i])
     f = dynamicBlocks.index(avail_block[i])
     print("confirmation", pose[dynamicBlocks[f]])
@@ -190,6 +195,8 @@ if __name__ == '__main__':
         newq = inverse(Tf_bl2, 0)
         setpath(newq)
         setpath([0, 0, 0, 0, 0, 0])
+        setpath([-1.3, 0, 0, 0, 0, 0])
+        setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 0])
         setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 0])
         setpath([-1.3, 1.2, -1.5, np.pi/2, -np.pi/2, 30])
         setpath([-1.3, 0.9, -1.5, np.pi/2, -np.pi/2, 30])
