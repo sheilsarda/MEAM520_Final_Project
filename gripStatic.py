@@ -171,10 +171,10 @@ def getSideMat(z, loc, color, cons, a, angled=False):
     if angled:
         y = normalize(np.cross(z, x))
     
-    locOffsetA = loc - (a[0] - 5.0) * z
+    locOffsetA = loc - a[0] * z
     TFinalA = buildMat(x, y, z, locOffsetA[0] + cons, locOffsetA[1] + cons, locOffsetA[2])
     
-    TFinalB = None
+    TFinalB = TFinalA.copy()
     if a[0] != a[1]:
         locOffsetB = loc - a[1] * z
         TFinalB = buildMat(x, y, z, locOffsetB[0] + cons, locOffsetB[1] + cons, locOffsetB[2])
@@ -186,7 +186,7 @@ def getSideMat(z, loc, color, cons, a, angled=False):
         return rot.dot(TFinalA), rot.dot(TFinalB)
 
 
-def horizontalAngle(location, color, a=[0.0, 0.0]):
+def horizontalAngle(location, color, a=[0.0, 0.0], angled=False):
     if color == "red":
         cons = 200
         origin = np.array([-200.0, -200.0, 0.0])
@@ -195,6 +195,15 @@ def horizontalAngle(location, color, a=[0.0, 0.0]):
         origin = np.array([200.0, 200.0, 0.0])
 
     z = normalize(np.subtract(np.array([location[0], location[1], 0.0]), origin))
+    if angled:
+        #loc = location - a[0] * z
+        Ta, _ = getSideMat(z, location, color, cons, [0.0, 0.0])
+
+        ang = np.sqrt(a[1])
+        loc = location - ang * z
+        loc[2] += ang * 3.0
+        Tb, _ = getSideMat(z, loc, color, cons, [0.0, 0.0])
+        return Ta, Tb
     return getSideMat(z, location, color, cons, a)
 
 # Option 2
@@ -248,10 +257,10 @@ def calcNewQ4(q, pose, color, a):
         # If it can not come from above
         if not (side1 and side2):
             # print("Diagonal")
-            return getSideMat(ref, location, color, cons, a, angled=True)
+            return getSideMat(ref, location, color, cons, [a[0] - 20.0, a[1]], angled=True)
         
         # print("Side")
-        return getSideMat(blockDir, location, color, cons, a)
+        return getSideMat(blockDir, location, color, cons, [a[0] - 20.0, a[1]])
 
     # print("Top")
 
