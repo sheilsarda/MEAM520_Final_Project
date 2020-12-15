@@ -51,7 +51,18 @@ The general strategy used was to get as many dynamic and static blocks to the go
     
     \subsection{Static Blocks}
     %Venkata/Alexis
-    To pick up static blocks on the platforms, the grip static and calcIK functions were used to find the exact orientation of the robot necessary to reach a position 30 mm above the block if approach from a vertical standpoint. The grip static function prioritized the rotation of the wrist such that the orientation of the cube can be prioritized. 
+    To pick up each static block from the remaining platforms, we compute two desired homogeneous transformation matrices – one to approach the block ($T_b$), and one to grab it ($T_a$) – and then use inverse kinematics to get the necessary sets of joint values. $T_b$ and $T_a$ only differ in their last (position) columns. The distance between these positions and the current block is passed in from final.py (by default, 50mm and 10mm, respectively) We use two main techniques to get these matrices. 
+    
+    The first, and most common, option is to approach the block from above if that is a feasible transformation within the robot’s reachable workspace. We start with a Rotation matrix that represents an end effector pointing downwards (assuming all other joint angles are 0), we post-multiply it by a Z-Rotation matrix computed from Joint 4’s current value, and then we pre-multiply it based on the value Joint 1 needs to have for the robot to point at the block. Paired with the block’s location, this functionally positions the robot right at the block. However, we want to grab it as smoothly as possible, so we then find the shortest rotation that Joint 4 needs to make to align the end effector with the block’s pose. We rotate our matrix again by this new value, and we now have a rotation matrix that perfectly aligns the gripper’s axes to the cube axes. To increase our chances of a sideBonus, we also check if one of the gripper’s sides are touching the block’s white face, and, if so, we rotate the end effector again by 90 degrees. To create the final homogeneous transformation matrices, we use our Rotation matrix in the first three columns, and then use the block’s position shifted upwards (by 10 and 50mm) for the fourth. View calcNewQ4 under Implementation for more details.
+    
+    Otherwise, we approach the block from the side (with the last joint link and end effector parallel to the world X-Y plane). For this option, we do not care about the block’s initial orientation. Our approach matrix ($T_b$) begins close to the block, and the second grab matrix ($T_a$) positions the robot to push forward into the block’s space – 20mm ``closer’’ than the default - sliding the block to align its orientation close to that of the end effector, similar to the dynamic approach. We get the orientation of our transformation matrix through a simple cross product, knowing that our gripper’s desired Z-axis is the normalized vector from the robot origin to the block origin (flattened to the world X-Y plane), since we want the robot pointed at the block. View getSideMat under Implementation for more details.
+    
+    If neither of these two options are possible, there is a backup calculation to approach the block at an angle. we use the same calculation as above, except the Z-axis is instead the normalized vector from a desired Joint 2 location to the block. However, this has never been necessary. View the angled=True subsection getSideMat for more details.
+    
+    To decide between these three methods,  we do a quick computation to check to see if theoretical joint positions would be possible based on the robot’s link lengths and joint limits.
+    
+    The static section of final.py then uses these two matrices in the following order: q($T_b$) with the gripper at width 30, q($T_a$) with the gripper at width 30, q($T_a$) with the gripper at width 0, and then q($T_b$) with the gripper at width 0 to lift the block out of the way before positioning the it at the goal position as determined below.
+
     
     %need to talk more about grip static 
     \subsection{Goal Positioning/Stacking}
@@ -106,7 +117,33 @@ In our final match with Team 9, we were able to pick up 4 blocks, 2 static and 2
 % - where the fucntion is located (i.e. file name and line number)
 
 \subsection{gripStatic.py}
+    \subsubsection{calcNewQ4}
 
+    Named as such because it originally only calculated q[4], this function finds the desired homogeneous transformation matrices to approach a block. It takes in inputs: q, the 1x6 vector of current joint inputs; pose, a 4x4 matrix defining the current block position and orientation; color, a string of either ``blue’’ or ``red’’; and a, a length 2 array determining the distance the robot should be from the block. It outputs two 4x4 desired T0es. $T_a$ being the transformation matrix that locate the robot at the block; $T_b$ positions the robot a distance away for the approach.
+    
+    This method declares different values for the varables cons, origin, startDir, and effectorDown based on color; it allow sfor this method to work for both the red and blue robots. Using \textbf{inRange}, we check if we can approach the robot from above. (If not, we use the method \textbf{inRange} to return $T_a$ and $T_b$).
+    
+    Starting with a basic Rotation Matrix pointing in the negative Z direction, we post-multiply it by a Z-Rotation matrix computed from Joint 4’s current value, q[4], and then we pre-multiply it based on the \textbf{angularDifference} between the vector startDir (where the robot points in its 0 state) and blockDir (the vector from the robot origin to the block).  We then find the shortest rotation needed to align this Rotation Matrix with the block’s pose, done in \textbf{ checkCubeAngle} below. We make sure to clamp this value to the joint limits (by offsetting it by 90 degrees if it exceeds the limits). We once again post-multiply our Rotation Matrix by a Z-Matrix based on this angle, getting our near-final gripper orientation. To increase our chances of a sideBonus, we also check whether one of the gripper’s sides is touching the block’s positive-z face by comparing the block’s z-axis with the gripper’s x-axis (using a dot product). If so, we rotate the end effector again by 90 degrees (once again bound by the joint limits). We return two homogeneous transformation matrices using this rotation matrix and position values above the block’s location (offset by a[0] and a[1] in the Z direction).
+    
+    \subsubsection{checkCubeAngle}
+    This function gets the angle between a given frame and the world space rotation of a cube. It takes in inputs: cubeR, a 4x4 matrix defining the current cube position and orientation; rotAxis, [0, 1, or 2] defining the axis of rotation of the current frame, Z by default; and jointR, a 3x3 matrix defining the Frame to compare the block to. First, this function determines which cube axis points upwards (or downwards), then, knowing that the two other axes are flush to the world X-Y plane, we get the angularDifference between one of these axes and a non-axis-of-rotation for the reference frame. We mod this angle so that it is of magnitude 45 degrees at a maximum.
+    
+    \subsubsection{angularDifference}
+    
+    Gets the magnitude of the angle between two vectors using the law of cosines, and then gets the direction of rotation using a simplified cross product (based on the given axis of rotation).
+    
+    \subsubsection{getSideMat}
+    
+    Through this function, on input angled=False, we know that the gripper must be parallel to the X-Y plane, and thus the end effector’s Y-axis will be (0, 0, 1) in world space. The gripper’s desired Z-axis is given. Now, to get the X-axis, we just take the cross of the gripper’s Y and Z axes. These (x, y, z) vectors are the 0th, 1st, and 2nd columns of $T_a$ and $T_b$. The last position columns are the positions of the block offset (along this local Z-axis) by the distances passed in from final.py.
+    
+    On input angled=True, the Z-axis is not necessarily parallel to the X-Y plane. We follow the calculation from above, but we also recompute the Y-axis after the fact using the cross of the gripper’s X and Z axes.
+    
+    \subsubsection{horizontalAngle}
+    
+    An easier way to call getSideMat (calculates inputs z and cons on its own). This is used in final.py to place blocks at their goal positions.
+    
+    \subsubsection{inRange}
+    For the robot to come from above, check to see if a point positioned  L4+L5 above the block (a theoretical joint 3) is within L2+L3 distance of joint 1 (L1 above the origin). For the robot to come from the side, compare the theoretical Joint 3 to an angled Joint 2. If neither of these positions are in the right range, we default to the “angled” method. This is just an approximation, and not as effective as checking the isPos value from an IK calculation, but it is much quicker.
 
 \subsection{final.py}
     \verb|final.py| has 3 functions, setpath, closestblock and avail\_dyn.  Alongside these functions, this file also contains the necessary code to control our robot in a competition or testing environment.  
@@ -156,7 +193,7 @@ In our final match with Team 9, we were able to pick up 4 blocks, 2 static and 2
 The robot was able to meet the objective of getting all the blocks into goal by the 60 seconds limit in most runs where it was not competing. It was also able to carefully stack up to 3 blocks in one of its match-ups. Some of the weakness of the robot which prevent the robot to move to the next rounds were caused by the inability to change the orientation of the blocks to keep the white face up since getting more blocks to the goal was the bigger priority. When picking up the dynamic blocks, there was time wasted waiting for the block to reach a certain angle within the turntable. This prevented the robot to make time to carefully stack more blocks and change their orientations. 
 
 In future work, we plan on implementing a more efficient method of picking up dynamic blocks, better utilizing the angular and linear velocities to determine the shortest path to pick up a block, which would result in more dynamic blocks stacked in the goal platform.  We also plan on fine tuning the stacking done with static blocks.  While we had code in place to account for the height of a stack, our robot knocked over the stack after two static blocks due to it not lifting up high enough for the third static block.  With this tuning, our robot would be able to successfully stack all dynamic and static blocks into their 3 respective stacks.
-
+\newpage
 
 \section{Appendix}
 
