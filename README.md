@@ -10,7 +10,7 @@ Teams will use the concepts learned during the semester to control their simulat
 head-to-head competition with their opponents’ robot. The robots will manipulate objects in the simulated
 environment to score points, culminating in a class-wide tournament.
 
-[**Final Report detailing our strategy and implementation**](/Report/FinalProject.pdf)
+[**Final Report detailing our strategy and implementation**](/Report/main.pdf)
 
 <img src="imgs/Virtual_env.png" width=800>
 
